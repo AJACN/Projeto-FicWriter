@@ -14,7 +14,7 @@ client = genai.Client(api_key=API_KEY)
 
 @app.route("/")
 def home():
-    return "api okay"
+    return "API funcionando"
 
 def criar_fanfic(personagens_input):
     if not personagens_input or len(personagens_input) < 3:
