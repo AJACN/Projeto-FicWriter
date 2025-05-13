@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Fanfics com IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        body {
+            background: linear-gradient(270deg, #f7f5eb, #ede8d9, #e0d8c0);
+            background-size: 600% 600%;
+            animation: gradientAnimation 15s ease infinite;
+        }
+    </style>
+</head>
+<body class="font-sans min-h-screen flex items-center justify-center bg-gray-100 py-16">
+    <div class="container max-w-lg mx-auto bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200">
+        <div class="bg-teal-50 py-8 px-10 text-center">
+            <h1 class="font-playfair-display text-3xl font-semibold text-teal-800 tracking-tight">Biblioteca Mágica de Fanfics</h1>
+            <p class="mt-2 text-sm text-gray-600">Crie histórias fantásticas com a ajuda da inteligência artificial.</p>
+        </div>
+
+        <div id="formulario" class="p-8 space-y-6">
+            <div class="flex items-center justify-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-teal-500">
+                    <path fill-rule="evenodd" d="M12 2.25c-5.384 0-9.75 4.366-9.75 9.75s4.366 9.75 9.75 9.75 9.75-4.366 9.75-9.75S17.384 2.25 12 2.25zm-2.625 6c-.54 0-.975.435-.975.975v4.5c0 .54.435.975.975.975h5.25c.54 0 .975-.435.975-.975v-4.5c0-.54-.435-.975-.975-.975h-5.25z" clip-rule="evenodd" />
+                </svg>
+                <h2 class="text-lg font-semibold text-gray-700">Contos em Construção</h2>
+            </div>
+
+            <div id="personagens" class="space-y-3">
+                <div class="personagem-row flex items-center space-x-3">
+                    <input type="text" class="personagem personagem-input flex-1 p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-400 focus:outline-none text-sm text-gray-700" placeholder="Personagem Principal">
+                    <button class="remove-personagem-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded-md text-sm transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">Remover</button>
+                </div>
+                <div class="personagem-row flex items-center space-x-3">
+                    <input type="text" class="personagem personagem-input flex-1 p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-400 focus:outline-none text-sm text-gray-700" placeholder="Co-protagonista">
+                    <button class="remove-personagem-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded-md text-sm transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">Remover</button>
+                </div>
+                <div class="personagem-row flex items-center space-x-3">
+                    <input type="text" class="personagem personagem-input flex-1 p-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-400 focus:outline-none text-sm text-gray-700" placeholder="Antagonista">
+                    <button class="remove-personagem-btn bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded-md text-sm transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">Remover</button>
+                </div>
+            </div>
+
+            <div class="mt-4 flex justify-center space-x-3">
+                <button id="add-personagem-btn" class="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2.5 px-4 rounded-md text-sm transition duration-200 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-1 -ml-1">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 01-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                    Adicionar
+                </button>
+                <button id="generate-fanfic-btn" class="bg-amber-400 hover:bg-amber-500 text-white font-semibold py-2.5 px-4 rounded-md text-sm transition duration-200 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-1 -ml-1">
+                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 5.656L10 10.656l1.172-1.172a4 4 0 015.656-5.656 4 4 0 11-5.656 5.656L10 11.344l-1.172 1.172a4 4 0 01-5.656-5.656z" clip-rule="evenodd" />
+                    </svg>
+                    Gerar Conto
+                </button>
+                <button id="clear-personagens-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2.5 px-4 rounded-md text-sm transition duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 mr-1 -ml-1">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h12a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1zm3 1a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                    </svg>
+                    Limpar Campos
+                </button>
+            </div>
+        </div>
+
+        <div id="response" class="bg-white p-8 border-t border-gray-200 text-left max-w-lg mx-auto hidden">
+            <div class="flex items-center justify-center">
+                <svg class="animate-spin h-8 w-8 text-teal-500 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C4 0 0 4 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-gray-700 text-md">A IA está escrevendo...</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="./script.js" defer></script>
+</body>
+</html>
