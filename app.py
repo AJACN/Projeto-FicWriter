@@ -12,6 +12,10 @@ CORS(app)
 API_KEY = os.getenv("GOOGLE_API_KEY")
 client = genai.Client(api_key=API_KEY)
 
+@app.route("/")
+def home():
+    return "api okay"
+
 def criar_fanfic(personagens_input):
     if not personagens_input or len(personagens_input) < 3:
         return {"error": "São necessários pelo menos 3 personagens."}
