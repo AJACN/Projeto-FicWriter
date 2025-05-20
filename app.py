@@ -40,9 +40,45 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
     if idioma_input:
         prompt_adicionais += f" O idioma da fanfic deve ser: {idioma_input}."
 
+    # Mapeamento para traduzir "Capítulo"
+    traducao_capitulo = {
+        "Português": "Capítulo",
+        "Inglês": "Chapter",
+        "Espanhol": "Capítulo",
+        "Francês": "Chapitre",
+        "Alemão": "Kapitel",
+        "Japonês": "章 (Shō)", # Nota: 'Shō' é um termo genérico, 'Dai-ichi-shō' (primeiro capítulo) é mais específico. O modelo pode preferir um termo mais comum ou adaptá-lo.
+        "Chinês (Simplificado)": "章 (Zhāng)",
+        "Hindi": "अध्याय (Adhyay)",
+        "Árabe": "فصل (Faṣl)",
+        "Russo": "Глава (Glava)",
+        "Italiano": "Capitolo",
+        "Coreano": "장 (Jang)",
+        "Holandês": "Hoofdstuk",
+        "Sueco": "Kapitel",
+        "Norueguês": "Kapittel",
+        "Dinamarquês": "Kapitel",
+        "Finlandês": "Luku",
+        "Polonês": "Rozdział",
+        "Turco": "Bölüm",
+        "Vietnamita": "Chương",
+        "Tailandês": "บท (Bot)",
+        "Indonésio": "Bab",
+        "Grego": "Κεφάλαιο (Kefálaio)",
+        "Hebraico": "פרק (Pereq)",
+        "Búlgaro": "Глава (Glava)",
+        "Checo": "Kapitola",
+        "Húngaro": "Fejezet",
+        "Romeno": "Capitol",
+        "Português (Portugal)": "Capítulo" # Pode ser útil ter essa distinção, mas geralmente é o mesmo que Português (Brasil) para "capítulo"
+    }
+
+    palavra_capitulo = traducao_capitulo.get(idioma_input, "Capítulo") # Padrão para "Capítulo" se o idioma não estiver mapeado
+
 
     prompt = f"""
         Crie uma fanfic que tenha como base os seguintes personagens: {prompt_personagens_str}.{prompt_adicionais}
+        Os capítulos devem ser numerados sequencialmente e usar a palavra "{palavra_capitulo}" seguida do número.
         Caso os personagens, seus papéis, gênero, cenário ou idioma inseridos não sejam apropriados, por exemplo, por serem relacionados a conteúdo sexual,
         ódio, qualquer coisa inapropriada ou coisas que não são de boa conduta, ignore-os,
         não gere a fanfic e alerte o usuário sobre o uso responsável da ferramenta de geração de fanfics.
@@ -54,7 +90,7 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
             "titulo": "Título da Fanfic",
             "capitulos": [
                 {{
-                    "titulo": "Título do Capítulo 1",
+                    "titulo": "{palavra_capitulo} 1: Título do Capítulo 1",
                     "historia": [
                         "Parágrafo 1 do Capítulo 1.",
                         "Parágrafo 2 do Capítulo 1.",
@@ -62,7 +98,7 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
                     ]
                 }},
                 {{
-                    "titulo": "Título do Capítulo 2",
+                    "titulo": "{palavra_capitulo} 2: Título do Capítulo 2",
                     "historia": [
                         "Parágrafo 1 do Capítulo 2.",
                         "Parágrafo 2 do Capítulo 2.",
@@ -70,7 +106,7 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
                     ]
                 }},
                 {{
-                    "titulo": "Título do Capítulo N",
+                    "titulo": "{palavra_capitulo} N: Título do Capítulo N",
                     "historia": [
                         "Parágrafo 1 do Capítulo N.",
                         "Parágrafo 2 do Capítulo N.",
