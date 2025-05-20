@@ -41,7 +41,6 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
     # Pediremos apenas o título do capítulo e a história.
     prompt = f"""
         Crie uma fanfic que tenha como base os seguintes personagens: {prompt_personagens_str}.{prompt_adicionais}
-        Os capítulos devem ser numerados sequencialmente, mas você NÃO precisa adicionar o prefixo 'Capítulo N:', 'Chapter N:', '章 N:' ou similar ao título do capítulo. Apenas retorne o título do capítulo em si.
 
         Caso os personagens, seus papéis, gênero, cenário ou idioma inseridos não sejam apropriados, por exemplo, por serem relacionados a conteúdo sexual,
         ódio, qualquer coisa inapropriada ou coisas que não são de boa conduta, ignore-os,
