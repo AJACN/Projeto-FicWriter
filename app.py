@@ -16,13 +16,10 @@ client = genai.Client(api_key=API_KEY)
 def home():
     return "API funcionando"
 
-# A função criar_fanfic agora aceita uma lista de dicionários de personagens, gênero, cenário e idioma
 def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, idioma_input=None):
-    # O mínimo de personagens agora é 1
     if not personagens_com_papeis or len(personagens_com_papeis) < 1:
         return {"error": "É necessário pelo menos 1 personagem."}
 
-    # Constrói a string de personagens com seus papéis definidos pelo usuário
     prompt_personagens = []
     for p in personagens_com_papeis:
         if p.get("papel"):
@@ -40,57 +37,15 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
     if idioma_input:
         prompt_adicionais += f" O idioma da fanfic deve ser: {idioma_input}."
 
-    # --- NOVA ABORDAGEM: Gerar o prefixo do capítulo no backend ---
-    # Mapeamento para a palavra "Capítulo" e sua formatação no idioma
-    mapa_prefixo_capitulo = {
-        "Português": "Capítulo {numero}:",
-        "Inglês": "Chapter {numero}:",
-        "Espanhol": "Capítulo {numero}:",
-        "Francês": "Chapitre {numero}:",
-        "Alemão": "Kapitel {numero}:",
-        "Japonês": "章 {numero}:", # Manter o numeral arábico, é comum em japonês para capítulos
-        "Chinês (Simplificado)": "第 {numero} 章:", # Adicionando "第" para numerais ordinais
-        "Hindi": "अध्याय {numero}:",
-        "Árabe": "الفصل {numero}:", # A posição do número pode variar no árabe, mas vamos manter simples por enquanto
-        "Russo": "Глава {numero}:",
-        "Italiano": "Capitolo {numero}:",
-        "Coreano": "장 {numero}:",
-        "Holandês": "Hoofdstuk {numero}:",
-        "Sueco": "Kapitel {numero}:",
-        "Norueguês": "Kapittel {numero}:",
-        "Dinamarquês": "Kapitel {numero}:",
-        "Finlandês": "Luku {numero}:",
-        "Polonês": "Rozdział {numero}:",
-        "Turco": "Bölüm {numero}:",
-        "Vietnamita": "Chương {numero}:",
-        "Tailandês": "บทที่ {numero}:", # "บทที่" significa "Capítulo número"
-        "Indonésio": "Bab {numero}:",
-        "Grego": "Κεφάλαιο {numero}:",
-        "Hebraico": "פרק {numero}:",
-        "Búlgaro": "Глава {numero}:",
-        "Checo": "Kapitola {numero}:",
-        "Húngaro": "Fejezet {numero}:", # Húngaro normalmente usa ponto após o número, mas o modelo pode adaptar se pedirmos o formato
-        "Romeno": "Capitolul {numero}:", # Romeno normalmente usa "Capitolul X"
-        "Português (Portugal)": "Capítulo {numero}:"
-    }
-
-    # Pega o formato do prefixo do capítulo para o idioma selecionado
-    formato_prefixo_capitulo = mapa_prefixo_capitulo.get(idioma_input, mapa_prefixo_capitulo["Português"])
-
-    # Constrói os exemplos de título no prompt usando o formato gerado
-    titulo_capitulo1_exemplo = formato_prefixo_capitulo.format(numero=1) + " Título do Capítulo 1"
-    titulo_capitulo2_exemplo = formato_prefixo_capitulo.format(numero=2) + " Título do Capítulo 2"
-    titulo_capituloN_exemplo = formato_prefixo_capitulo.format(numero='N') + " Título do Capítulo N"
-
-
+    # A IA não será mais responsável por adicionar "Capítulo X:".
+    # Pediremos apenas o título do capítulo e a história.
     prompt = f"""
         Crie uma fanfic que tenha como base os seguintes personagens: {prompt_personagens_str}.{prompt_adicionais}
-        Os capítulos devem ser numerados sequencialmente. O formato do título de cada capítulo deve seguir o padrão 'PALAVRA_CAPÍTULO NÚMERO: Título do Capítulo', onde 'PALAVRA_CAPÍTULO' e a numeração são adaptados para o idioma da fanfic.
-        Por exemplo, em Português seria 'Capítulo 1: ...', em Inglês seria 'Chapter 1: ...', em Japonês seria '章 1: ...'.
+        Os capítulos devem ser numerados sequencialmente, mas você NÃO precisa adicionar o prefixo 'Capítulo N:', 'Chapter N:', '章 N:' ou similar ao título do capítulo. Apenas retorne o título do capítulo em si.
 
         Caso os personagens, seus papéis, gênero, cenário ou idioma inseridos não sejam apropriados, por exemplo, por serem relacionados a conteúdo sexual,
         ódio, qualquer coisa inapropriada ou coisas que não são de boa conduta, ignore-os,
-        não gere a fanfic e alertee o usuário sobre o uso responsável da ferramenta de geração de fanfics.
+        não gere a fanfic e alerte o usuário sobre o uso responsável da ferramenta de geração de fanfics.
         Caso o nome dos personagens não façam sentido (por exemplo, uma série aleatória de caracteres),
         a fanfic deve ser uma história de como adquirem um nome real.
         O primeiro capítulo deve ser de introdução, o segundo de desenvolvimento e o terceiro sendo a finalização.
@@ -99,7 +54,7 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
             "titulo": "Título da Fanfic",
             "capitulos": [
                 {{
-                    "titulo": "{titulo_capitulo1_exemplo}",
+                    "titulo": "Título do Capítulo 1 (sem o prefixo de capítulo)",
                     "historia": [
                         "Parágrafo 1 do Capítulo 1.",
                         "Parágrafo 2 do Capítulo 1.",
@@ -107,7 +62,7 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
                     ]
                 }},
                 {{
-                    "titulo": "{titulo_capitulo2_exemplo}",
+                    "titulo": "Título do Capítulo 2 (sem o prefixo de capítulo)",
                     "historia": [
                         "Parágrafo 1 do Capítulo 2.",
                         "Parágrafo 2 do Capítulo 2.",
@@ -115,7 +70,7 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
                     ]
                 }},
                 {{
-                    "titulo": "{titulo_capituloN_exemplo}",
+                    "titulo": "Título do Capítulo N (sem o prefixo de capítulo)",
                     "historia": [
                         "Parágrafo 1 do Capítulo N.",
                         "Parágrafo 2 do Capítulo N.",
@@ -139,8 +94,63 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
         if hasattr(response, 'text'):
             response_text = response.text
             try:
-                response_json = json.loads(response_text)
-                return response_json
+                fanfic_data = json.loads(response_text)
+
+                # --- PÓS-PROCESSAMENTO AQUI ---
+                # Mapeamento para a palavra "Capítulo" e sua formatação no idioma
+                mapa_prefixo_capitulo = {
+                    "Português": "Capítulo {numero}:",
+                    "Inglês": "Chapter {numero}:",
+                    "Espanhol": "Capítulo {numero}:",
+                    "Francês": "Chapitre {numero}:",
+                    "Alemão": "Kapitel {numero}:",
+                    "Japonês": "章 {numero}:",
+                    "Chinês (Simplificado)": "第 {numero} 章:",
+                    "Hindi": "अध्याय {numero}:",
+                    "Árabe": "الفصل {numero}:",
+                    "Russo": "Глава {numero}:",
+                    "Italiano": "Capitolo {numero}:",
+                    "Coreano": "장 {numero}:",
+                    "Holandês": "Hoofdstuk {numero}:",
+                    "Sueco": "Kapitel {numero}:",
+                    "Norueguês": "Kapittel {numero}:",
+                    "Dinamarquês": "Kapitel {numero}:",
+                    "Finlandês": "Luku {numero}:",
+                    "Polonês": "Rozdział {numero}:",
+                    "Turco": "Bölüm {numero}:",
+                    "Vietnamita": "Chương {numero}:",
+                    "Tailandês": "บทที่ {numero}:",
+                    "Indonésio": "Bab {numero}:",
+                    "Grego": "Κεφάλαιο {numero}:",
+                    "Hebraico": "פרק {numero}:",
+                    "Búlgaro": "Глава {numero}:",
+                    "Checo": "Kapitola {numero}:",
+                    "Húngaro": "Fejezet {numero}:",
+                    "Romeno": "Capitolul {numero}:",
+                    "Português (Portugal)": "Capítulo {numero}:"
+                }
+
+                # Pega o formato do prefixo do capítulo para o idioma selecionado
+                formato_prefixo_capitulo = mapa_prefixo_capitulo.get(idioma_input, mapa_prefixo_capitulo["Português"])
+
+                # Adiciona o prefixo aos títulos dos capítulos
+                if "capitulos" in fanfic_data and isinstance(fanfic_data["capitulos"], list):
+                    for i, capitulo in enumerate(fanfic_data["capitulos"]):
+                        if "titulo" in capitulo:
+                            # Remove qualquer prefixo de capítulo existente gerado pela IA
+                            # Ex: "Capítulo 1: ", "Chapter 1: ", "章 1: "
+                            # Isso é uma tentativa de limpeza, pode não ser 100% à prova de falhas se a IA for muito criativa
+                            original_title = capitulo["titulo"].strip()
+                            for prefix in mapa_prefixo_capitulo.values():
+                                for num in range(1, 4): # Tenta remover para os primeiros 3 capítulos
+                                    formatted_prefix = prefix.format(numero=num)
+                                    if original_title.startswith(formatted_prefix):
+                                        original_title = original_title[len(formatted_prefix):].strip()
+                                        break # Sai do loop interno se encontrou e removeu
+
+                            capitulo["titulo"] = formato_prefixo_capitulo.format(numero=i + 1) + " " + original_title.lstrip(":") # Adiciona o prefixo correto
+
+                return fanfic_data
             except json.JSONDecodeError as e:
                 print(f"Erro ao decodificar JSON da resposta da IA: {e}")
                 print(f"Texto da resposta da IA: {response_text}")
@@ -162,25 +172,22 @@ def make_fanfic():
         if not dados or not isinstance(dados, dict):
             return jsonify({'error': 'Requisição JSON inválida. Esperava um dicionário.'}), 400
 
-        # Agora 'personagens' é uma lista de dicionários {'nome': '...', 'papel': '...'}
         personagens_data = dados.get('personagens', [])
         genero = dados.get('genero')
         cenario = dados.get('cenario')
-        idioma = dados.get('idioma') # Novo campo para o idioma
+        idioma = dados.get('idioma')
 
         if not isinstance(personagens_data, list):
             return jsonify({'error': 'O campo "personagens" deve ser uma lista.'}), 400
 
-        # Valida que cada item na lista de personagens é um dicionário e tem 'nome'
         for p in personagens_data:
             if not isinstance(p, dict) or 'nome' not in p:
                 return jsonify({'error': 'Cada item na lista de personagens deve ser um dicionário com a chave "nome".'}), 400
 
-        # O mínimo de personagens agora é 1
         if len(personagens_data) < 1:
             return jsonify({'error': 'É necessário pelo menos 1 personagem.'}), 400
 
-        response = criar_fanfic(personagens_data, genero, cenario, idioma) # Passa o idioma para a função
+        response = criar_fanfic(personagens_data, genero, cenario, idioma)
         return jsonify(response), 200
 
     except Exception as e:
