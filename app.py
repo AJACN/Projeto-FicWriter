@@ -16,23 +16,33 @@ client = genai.Client(api_key=API_KEY)
 def home():
     return "API funcionando"
 
-def criar_fanfic(personagens_input):
-    if not personagens_input or len(personagens_input) < 3:
-        return {"error": "São necessários pelo menos 3 personagens."}
+# A função criar_fanfic agora aceita uma lista de dicionários de personagens, gênero e cenário
+def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None):
+    # O mínimo de personagens agora é 1
+    if not personagens_com_papeis or len(personagens_com_papeis) < 1:
+        return {"error": "É necessário pelo menos 1 personagem."}
 
-    protagonista = personagens_input[0]
-    co_protagonista = personagens_input[1]
-    antagonista = personagens_input[2]
-    outros_personagens = personagens_input[3:]
+    # Constrói a string de personagens com seus papéis definidos pelo usuário
+    prompt_personagens = []
+    for p in personagens_com_papeis:
+        if p.get("papel"):
+            prompt_personagens.append(f"{p['papel']}: {p['nome']}")
+        else:
+            prompt_personagens.append(f"Personagem: {p['nome']}")
 
-    prompt_personagens = f"Protagonista: {protagonista}, Co-protagonista: {co_protagonista}, Antagonista: {antagonista}"
-    if outros_personagens:
-        prompt_personagens += f", Outros personagens: {', '.join(outros_personagens)}"
+    prompt_personagens_str = ", ".join(prompt_personagens)
+
+    prompt_adicionais = ""
+    if genero_input:
+        prompt_adicionais += f" O gênero da fanfic deve ser: {genero_input}."
+    if cenario_input:
+        prompt_adicionais += f" O cenário onde a história se passa é: {cenario_input}."
+
 
     prompt = f"""
-        Crie uma fanfic que tenha como base os seguintes personagens: {prompt_personagens}.
-        Caso os personagens inseridos não sejam apropriados, por exemplo, por serem relacionados a conteudo sexual,
-        ódio, qualquer coisa inapropriada ou coisas que não são de boa conduta, ignore-os, 
+        Crie uma fanfic que tenha como base os seguintes personagens: {prompt_personagens_str}.{prompt_adicionais}
+        Caso os personagens, seus papéis, gênero ou cenário inseridos não sejam apropriados, por exemplo, por serem relacionados a conteúdo sexual,
+        ódio, qualquer coisa inapropriada ou coisas que não são de boa conduta, ignore-os,
         não gere a fanfic e alerte o usuário sobre o uso responsável da ferramenta de geração de fanfics.
         Caso o nome dos personagens não façam sentido (por exemplo, uma série aleatória de caracteres),
         a fanfic deve ser uma história de como adquirem um nome real.
@@ -105,15 +115,24 @@ def make_fanfic():
         if not dados or not isinstance(dados, dict):
             return jsonify({'error': 'Requisição JSON inválida. Esperava um dicionário.'}), 400
 
-        personagens = dados.get('personagens', [])
+        # Agora 'personagens' é uma lista de dicionários {'nome': '...', 'papel': '...'}
+        personagens_data = dados.get('personagens', [])
+        genero = dados.get('genero')
+        cenario = dados.get('cenario')
 
-        if not isinstance(personagens, list):
-            return jsonify({'error': 'O campo \"personagens\" deve ser uma lista.'}), 400
+        if not isinstance(personagens_data, list):
+            return jsonify({'error': 'O campo "personagens" deve ser uma lista.'}), 400
 
-        if len(personagens) < 3:
-            return jsonify({'error': 'São necessários pelo menos 3 personagens.'}), 400
+        # Valida que cada item na lista de personagens é um dicionário e tem 'nome'
+        for p in personagens_data:
+            if not isinstance(p, dict) or 'nome' not in p:
+                return jsonify({'error': 'Cada item na lista de personagens deve ser um dicionário com a chave "nome".'}), 400
 
-        response = criar_fanfic(personagens)
+        # O mínimo de personagens agora é 1
+        if len(personagens_data) < 1:
+            return jsonify({'error': 'É necessário pelo menos 1 personagem.'}), 400
+
+        response = criar_fanfic(personagens_data, genero, cenario)
         return jsonify(response), 200
 
     except Exception as e:
