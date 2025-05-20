@@ -35,7 +35,7 @@ def criar_fanfic(personagens_input):
         ódio, qualquer coisa inapropriada ou coisas que não são de boa conduta, ignore-os, 
         não gere a fanfic e alerte o usuário sobre o uso responsável da ferramenta de geração de fanfics.
         Caso o nome dos personagens não façam sentido (por exemplo, uma série aleatória de caracteres),
-        a fanfic deve ser uma história de como ele adquire um nome real.
+        a fanfic deve ser uma história de como adquirem um nome real.
         O primeiro capítulo deve ser de introdução, o segundo de desenvolvimento e o terceiro sendo a finalização.
         Devolva no seguinte formato JSON:
         {{
