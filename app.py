@@ -32,8 +32,10 @@ def criar_fanfic(personagens_input):
     prompt = f"""
         Crie uma fanfic que tenha como base os seguintes personagens: {prompt_personagens}.
         Caso os personagens inseridos não sejam apropriados, por exemplo, por serem relacionados a conteudo sexual,
-        ódio, qualquer coisa inapropriada ou ou coisas que não façam sentido, ignore-os, 
+        ódio, qualquer coisa inapropriada ou coisas que não são de boa conduta, ignore-os, 
         não gere a fanfic e alerte o usuário sobre o uso responsável da ferramenta de geração de fanfics.
+        Caso o nome dos personagens não façam sentido (por exemplo, uma série aleatória de caracteres),
+        a fanfic deve ser uma história de como ele adquire um nome real.
         O primeiro capítulo deve ser de introdução, o segundo de desenvolvimento e o terceiro sendo a finalização.
         Devolva no seguinte formato JSON:
         {{
