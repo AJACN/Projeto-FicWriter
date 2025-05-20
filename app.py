@@ -16,8 +16,8 @@ client = genai.Client(api_key=API_KEY)
 def home():
     return "API funcionando"
 
-# A função criar_fanfic agora aceita uma lista de dicionários de personagens, gênero e cenário
-def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None):
+# A função criar_fanfic agora aceita uma lista de dicionários de personagens, gênero, cenário e idioma
+def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, idioma_input=None):
     # O mínimo de personagens agora é 1
     if not personagens_com_papeis or len(personagens_com_papeis) < 1:
         return {"error": "É necessário pelo menos 1 personagem."}
@@ -37,11 +37,13 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None):
         prompt_adicionais += f" O gênero da fanfic deve ser: {genero_input}."
     if cenario_input:
         prompt_adicionais += f" O cenário onde a história se passa é: {cenario_input}."
+    if idioma_input:
+        prompt_adicionais += f" O idioma da fanfic deve ser: {idioma_input}."
 
 
     prompt = f"""
         Crie uma fanfic que tenha como base os seguintes personagens: {prompt_personagens_str}.{prompt_adicionais}
-        Caso os personagens, seus papéis, gênero ou cenário inseridos não sejam apropriados, por exemplo, por serem relacionados a conteúdo sexual,
+        Caso os personagens, seus papéis, gênero, cenário ou idioma inseridos não sejam apropriados, por exemplo, por serem relacionados a conteúdo sexual,
         ódio, qualquer coisa inapropriada ou coisas que não são de boa conduta, ignore-os,
         não gere a fanfic e alerte o usuário sobre o uso responsável da ferramenta de geração de fanfics.
         Caso o nome dos personagens não façam sentido (por exemplo, uma série aleatória de caracteres),
@@ -119,6 +121,7 @@ def make_fanfic():
         personagens_data = dados.get('personagens', [])
         genero = dados.get('genero')
         cenario = dados.get('cenario')
+        idioma = dados.get('idioma') # Novo campo para o idioma
 
         if not isinstance(personagens_data, list):
             return jsonify({'error': 'O campo "personagens" deve ser uma lista.'}), 400
@@ -132,7 +135,7 @@ def make_fanfic():
         if len(personagens_data) < 1:
             return jsonify({'error': 'É necessário pelo menos 1 personagem.'}), 400
 
-        response = criar_fanfic(personagens_data, genero, cenario)
+        response = criar_fanfic(personagens_data, genero, cenario, idioma) # Passa o idioma para a função
         return jsonify(response), 200
 
     except Exception as e:
