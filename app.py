@@ -41,6 +41,7 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
     # Pediremos apenas o título do capítulo e a história.
     prompt = f"""
         Crie uma fanfic que tenha como base os seguintes personagens: {prompt_personagens_str}.{prompt_adicionais}
+        Os capítulos devem ser numerados sequencialmente, mas você NÃO precisa adicionar o prefixo como 'Capítulo 1:', 'Chapter 1:', '章 1:' ou similar ao título do capítulo. Apenas retorne o título do capítulo em si. O título que você gerar NÃO DEVE conter a palavra 'Capítulo', 'Chapter', '章', 'Fase', 'Parte' ou qualquer variação de "capítulo" no idioma da fanfic ou em português.
 
         Caso os personagens, seus papéis, gênero, cenário ou idioma inseridos não sejam apropriados, por exemplo, por serem relacionados a conteúdo sexual,
         ódio, qualquer coisa inapropriada ou coisas que não são de boa conduta, ignore-os,
@@ -81,6 +82,10 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
         A fanfic pode ser de qualquer gênero, desde que não seja inapropriada ou explícita.
         Dê preferência para fanfics rápidas de serem lidas.
         """
+    print(f"\n--- PROMPT ENVIADO PARA IA ({idioma_input}) ---")
+    print(prompt)
+    print("-------------------------------------------\n")
+
     try:
         response = client.models.generate_content(
             model="gemini-2.0-flash",
@@ -92,11 +97,14 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
 
         if hasattr(response, 'text'):
             response_text = response.text
+            print(f"\n--- RESPOSTA BRUTA DA IA ({idioma_input}) ---")
+            print(response_text)
+            print("-------------------------------------------\n")
+
             try:
                 fanfic_data = json.loads(response_text)
 
                 # --- PÓS-PROCESSAMENTO AQUI ---
-                # Mapeamento para a palavra "Capítulo" e sua formatação no idioma
                 mapa_prefixo_capitulo = {
                     "Português": "Capítulo {numero}:",
                     "Inglês": "Chapter {numero}:",
@@ -129,25 +137,48 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
                     "Português (Portugal)": "Capítulo {numero}:"
                 }
 
-                # Pega o formato do prefixo do capítulo para o idioma selecionado
                 formato_prefixo_capitulo = mapa_prefixo_capitulo.get(idioma_input, mapa_prefixo_capitulo["Português"])
 
-                # Adiciona o prefixo aos títulos dos capítulos
+                # Lista de palavras que podem indicar um prefixo de capítulo indesejado, em várias línguas
+                prefixos_para_remover = [
+                    "Capítulo", "Chapter", "Chapitre", "Kapitel", "章", "अध्याय", "فصل", "Глава", "Luku",
+                    "Rozdział", "Bölüm", "Chương", "บทที่", "Bab", "Κεφάλαιο", "פרק", "Kapitola", "Fejezet",
+                    "Capitolul", "Fase", "Parte", "Part", "Section", "Seção", "Vol.", "Volume", "Volumen"
+                ]
+                # Adiciona variações comuns de pontuação e números
+                for p in list(prefixos_para_remover): # Copia a lista para iterar e modificar
+                    for num in range(1, 10): # Numerais de 1 a 9, mais comuns em capítulos iniciais
+                        prefixos_para_remover.append(f"{p} {num}:")
+                        prefixos_para_remover.append(f"{p}{num}:")
+                        prefixos_para_remover.append(f"{p} {num}")
+                        prefixos_para_remover.append(f"{p}{num}")
+                        prefixos_para_remover.append(f"{p} {num} -")
+                        prefixos_para_remover.append(f"{p}{num} -")
+                        prefixos_para_remover.append(f"{p} {num}. ") # Ex: Capítulo 1.
+                        prefixos_para_remover.append(f"{p}{num}. ") # Ex: Capítulo1.
+
                 if "capitulos" in fanfic_data and isinstance(fanfic_data["capitulos"], list):
+                    print("\n--- PÓS-PROCESSAMENTO DOS CAPÍTULOS ---")
                     for i, capitulo in enumerate(fanfic_data["capitulos"]):
                         if "titulo" in capitulo:
-                            # Remove qualquer prefixo de capítulo existente gerado pela IA
-                            # Ex: "Capítulo 1: ", "Chapter 1: ", "章 1: "
-                            # Isso é uma tentativa de limpeza, pode não ser 100% à prova de falhas se a IA for muito criativa
                             original_title = capitulo["titulo"].strip()
-                            for prefix in mapa_prefixo_capitulo.values():
-                                for num in range(1, 4): # Tenta remover para os primeiros 3 capítulos
-                                    formatted_prefix = prefix.format(numero=num)
-                                    if original_title.startswith(formatted_prefix):
-                                        original_title = original_title[len(formatted_prefix):].strip()
-                                        break # Sai do loop interno se encontrou e removeu
+                            print(f"Capítulo {i+1} - Título original da IA: '{original_title}'")
 
-                            capitulo["titulo"] = formato_prefixo_capitulo.format(numero=i + 1) + " " + original_title.lstrip(":") # Adiciona o prefixo correto
+                            # Tenta remover qualquer prefixo indesejado gerado pela IA
+                            for prefix in sorted(list(set(prefixos_para_remover)), key=len, reverse=True): # Ordena por tamanho para remover os mais longos primeiro
+                                if original_title.lower().startswith(prefix.lower()): # Comparação sem case
+                                    original_title = original_title[len(prefix):].strip()
+                                    print(f"  Removido '{prefix}'. Título após remoção: '{original_title}'")
+                                    break # Sai do loop interno se encontrou e removeu
+
+                            # Remove dois pontos ou traços se ficarem no início
+                            original_title = original_title.lstrip(":- ").strip()
+                            if original_title.startswith("Título do Capítulo"): # Se a IA ignorou tudo e colocou a instrução literal
+                                original_title = "" # Limpa para não ter texto indesejado
+
+                            capitulo["titulo"] = formato_prefixo_capitulo.format(numero=i + 1) + " " + original_title
+                            print(f"  Título final formatado: '{capitulo['titulo']}'")
+                    print("-------------------------------------------\n")
 
                 return fanfic_data
             except json.JSONDecodeError as e:
