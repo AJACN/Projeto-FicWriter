@@ -41,7 +41,8 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
     # Pediremos apenas o título do capítulo e a história.
     prompt = f"""
         Crie uma fanfic que tenha como base os seguintes personagens: {prompt_personagens_str}.{prompt_adicionais}
-        Os capítulos devem ser numerados sequencialmente, mas você NÃO precisa adicionar o prefixo como 'Capítulo 1:', 'Chapter 1:', '章 1:' ou similar ao título do capítulo. Apenas retorne o título do capítulo em si. O título que você gerar NÃO DEVE conter a palavra 'Capítulo', 'Chapter', '章', 'Fase', 'Parte' ou qualquer variação de "capítulo" no idioma da fanfic ou em português.
+        Os capítulos devem ser numerados sequencialmente. Você NÃO deve adicionar nenhum prefixo como 'Capítulo 1:', 'Chapter 1:', '章 1:' ou similar ao título do capítulo. Apenas retorne o título do capítulo em si.
+        O título que você gerar NÃO DEVE conter a palavra 'Capítulo', 'Chapter', '章', 'Fase', 'Parte' ou qualquer variação de "capítulo" EM NENHUM IDIOMA (incluindo português, inglês, japonês, coreano, grego, etc.). O título do capítulo DEVE ser APENAS o nome do capítulo, no idioma principal da fanfic.
 
         Caso os personagens, seus papéis, gênero, cenário ou idioma inseridos não sejam apropriados, por exemplo, por serem relacionados a conteúdo sexual,
         ódio, qualquer coisa inapropriada ou coisas que não são de boa conduta, ignore-os,
@@ -54,7 +55,7 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
             "titulo": "Título da Fanfic",
             "capitulos": [
                 {{
-                    "titulo": "Título do Capítulo 1 (sem o prefixo de capítulo)",
+                    "titulo": "Título do Capítulo 1 (apenas o título, no idioma da fanfic, sem prefixos de capítulo)",
                     "historia": [
                         "Parágrafo 1 do Capítulo 1.",
                         "Parágrafo 2 do Capítulo 1.",
@@ -62,7 +63,7 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
                     ]
                 }},
                 {{
-                    "titulo": "Título do Capítulo 2 (sem o prefixo de capítulo)",
+                    "titulo": "Título do Capítulo 2 (apenas o título, no idioma da fanfic, sem prefixos de capítulo)",
                     "historia": [
                         "Parágrafo 1 do Capítulo 2.",
                         "Parágrafo 2 do Capítulo 2.",
@@ -70,7 +71,7 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
                     ]
                 }},
                 {{
-                    "titulo": "Título do Capítulo N (sem o prefixo de capítulo)",
+                    "titulo": "Título do Capítulo N (apenas o título, no idioma da fanfic, sem prefixos de capítulo)",
                     "historia": [
                         "Parágrafo 1 do Capítulo N.",
                         "Parágrafo 2 do Capítulo N.",
@@ -139,42 +140,39 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
 
                 formato_prefixo_capitulo = mapa_prefixo_capitulo.get(idioma_input, mapa_prefixo_capitulo["Português"])
 
-                # Lista de palavras que podem indicar um prefixo de capítulo indesejado, em várias línguas
-                prefixos_para_remover = [
-                    "Capítulo", "Chapter", "Chapitre", "Kapitel", "章", "अध्याय", "فصل", "Глава", "Luku",
-                    "Rozdział", "Bölüm", "Chương", "บทที่", "Bab", "Κεφάλαιο", "פרק", "Kapitola", "Fejezet",
-                    "Capitolul", "Fase", "Parte", "Part", "Section", "Seção", "Vol.", "Volume", "Volumen"
+                # Lista de padrões regex para remover prefixos, incluindo números e pontuações
+                # Isso tentará pegar "Capítulo 1:", "Capítulo 1", "Chapter 1:", "章 1:", "Capítulo:", etc.
+                regex_patterns_to_remove = [
+                    r"^\s*(?:Capítulo|Chapter|Chapitre|Kapitel|章|अध्याय|فصل|Глава|Luku|Rozdział|Bölüm|Chương|บทที่|Bab|Κεφάλαιο|פרק|Kapitola|Fejezet|Capitolul|Fase|Parte|Part|Section|Seção|Vol\.|Volume|Volumen)\s*\d*\s*[:\-\.]*\s*",
+                    r"^\s*\d+\s*[:\-\.]*\s*", # Para pegar apenas números como prefixo "1:"
+                    r"^\s*[:\-\.]*\s*" # Para pegar apenas pontuações no início
                 ]
-                # Adiciona variações comuns de pontuação e números
-                for p in list(prefixos_para_remover): # Copia a lista para iterar e modificar
-                    for num in range(1, 10): # Numerais de 1 a 9, mais comuns em capítulos iniciais
-                        prefixos_para_remover.append(f"{p} {num}:")
-                        prefixos_para_remover.append(f"{p}{num}:")
-                        prefixos_para_remover.append(f"{p} {num}")
-                        prefixos_para_remover.append(f"{p}{num}")
-                        prefixos_para_remover.append(f"{p} {num} -")
-                        prefixos_para_remover.append(f"{p}{num} -")
-                        prefixos_para_remover.append(f"{p} {num}. ") # Ex: Capítulo 1.
-                        prefixos_para_remover.append(f"{p}{num}. ") # Ex: Capítulo1.
+
 
                 if "capitulos" in fanfic_data and isinstance(fanfic_data["capitulos"], list):
                     print("\n--- PÓS-PROCESSAMENTO DOS CAPÍTULOS ---")
+                    import re # Importa regex
+
                     for i, capitulo in enumerate(fanfic_data["capitulos"]):
                         if "titulo" in capitulo:
                             original_title = capitulo["titulo"].strip()
                             print(f"Capítulo {i+1} - Título original da IA: '{original_title}'")
 
-                            # Tenta remover qualquer prefixo indesejado gerado pela IA
-                            for prefix in sorted(list(set(prefixos_para_remover)), key=len, reverse=True): # Ordena por tamanho para remover os mais longos primeiro
-                                if original_title.lower().startswith(prefix.lower()): # Comparação sem case
-                                    original_title = original_title[len(prefix):].strip()
-                                    print(f"  Removido '{prefix}'. Título após remoção: '{original_title}'")
-                                    break # Sai do loop interno se encontrou e removeu
+                            # Tenta remover qualquer prefixo indesejado usando regex
+                            cleaned_title = original_title
+                            for pattern in regex_patterns_to_remove:
+                                cleaned_title = re.sub(pattern, "", cleaned_title, flags=re.IGNORECASE).strip()
+                                # Se houve mudança, imprima e continue tentando com outras patterns no título já limpo
+                                if cleaned_title != original_title and cleaned_title.strip() != original_title.strip():
+                                     print(f"  Removido por regex '{pattern}'. Título após remoção: '{cleaned_title}'")
+                                original_title = cleaned_title # Atualiza para a próxima iteração
 
-                            # Remove dois pontos ou traços se ficarem no início
+                            # Remove qualquer pontuação ou traço remanescente no início
                             original_title = original_title.lstrip(":- ").strip()
-                            if original_title.startswith("Título do Capítulo"): # Se a IA ignorou tudo e colocou a instrução literal
-                                original_title = "" # Limpa para não ter texto indesejado
+
+                            # Se a IA ignorou tudo e colocou a instrução literal
+                            if original_title.lower().startswith("título do capítulo"):
+                                original_title = ""
 
                             capitulo["titulo"] = formato_prefixo_capitulo.format(numero=i + 1) + " " + original_title
                             print(f"  Título final formatado: '{capitulo['titulo']}'")
