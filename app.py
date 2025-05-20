@@ -22,9 +22,7 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
 
     prompt_personagens = []
     for p in personagens_com_papeis:
-        papel_str = p.get('papel', 'Personagem')
-        descricao_str = f" (Descrição: {p['descricao']})" if p.get('descricao') else "" # Adiciona descrição se existir
-        prompt_personagens.append(f"{papel_str}: {p['nome']}{descricao_str}")
+        prompt_personagens.append(f"{p.get('papel', 'Personagem')}: {p['nome']}")
     prompt_personagens_str = ", ".join(prompt_personagens)
 
     prompt_adicionais = ""
@@ -37,25 +35,10 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
 
     prompt = f"""
         Crie uma fanfic que tenha como base os seguintes personagens: {prompt_personagens_str}.{prompt_adicionais}
-        Incorpore as descrições fornecidas para cada personagem, garantindo que suas personalidades, características e motivações reflitam o que foi especificado. Se a descrição contradizer o papel, a descrição tem precedência na formação da personalidade e ações do personagem.
-
-        **Diretrizes de Conteúdo:**
-        Absolutamente NÃO gere conteúdo que seja:
-        - Sexual ou explicitamente sexual (incluindo insinuações).
-        - De ódio, preconceituoso, discriminatório (racismo, misoginia, homofobia, etc.).
-        - Promova violência gratuita, automutilação, terrorismo ou qualquer atividade ilegal.
-        - Gore excessivo ou perturbador.
-        - Que incite ou glorifique qualquer forma de crime ou dano.
-
-        **No entanto, para gêneros como "Ação" ou "Terror", permita a narrativa de eventos que são esperados para o gênero, desde que não violem as diretrizes acima.** Por exemplo:
-        - Em uma fanfic de ação, pode haver combate ou conflito, mas sem descrições gráficas de ferimentos horríveis ou tortura.
-        - Em uma fanfic de terror, pode haver suspense e medo psicológico, mas sem gore explícito ou violência sexual.
-        O foco deve ser na trama e desenvolvimento dos personagens dentro do gênero escolhido, mantendo a história envolvente sem recorrer a detalhes explícitos ou chocantes que possam ser ofensivos.
-
         Os capítulos devem ser numerados sequencialmente. Você NÃO deve adicionar nenhum prefixo como 'Capítulo 1:', 'Chapter 1:', '章 1:', '第 1 章:', '장 1:' ou similar ao título do capítulo. Apenas retorne o título do capítulo em si.
         O título que você gerar NÃO DEVE conter a palavra 'Capítulo', 'Chapter', '章', 'Fase', 'Parte' ou qualquer variação de "capítulo" EM NENHUM IDIOMA (incluindo português, inglês, japonês, coreano, grego, etc.). O título do capítulo DEVE ser APENAS o nome do capítulo, no idioma principal da fanfic.
 
-        Caso os personagens, seus papéis, descrições, gênero, cenário ou idioma inseridos não sejam apropriados, por exemplo, por serem relacionados a conteúdo sexual,
+        Caso os personagens, seus papéis, gênero, cenário ou idioma inseridos não sejam apropriados, por exemplo, por serem relacionados a conteúdo sexual,
         ódio, qualquer coisa inapropriada ou coisas que não são de boa conduta, ignore-os,
         não gere a fanfic e alerte o usuário sobre o uso responsável da ferramenta de geração de fanfics.
         Caso o nome dos personagens não façam sentido (por exemplo, uma série aleatória de caracteres),
@@ -91,6 +74,7 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
                 }}
             ]
         }}
+        A fanfic pode ser de qualquer gênero, desde que não seja inapropriada ou explícita.
         Dê preferência para fanfics rápidas de serem lidas.
         """
 
@@ -107,7 +91,7 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
             return {"error": "Resposta da IA não contém conteúdo textual."}
 
         response_text = response.text
-
+        
         try:
             fanfic_data = json.loads(response_text)
 
@@ -144,7 +128,7 @@ def criar_fanfic(personagens_com_papeis, genero_input=None, cenario_input=None, 
                         cleaned_title = original_title
                         for pattern in regex_patterns_to_remove:
                             cleaned_title = re.sub(pattern, "", cleaned_title, flags=re.IGNORECASE).strip()
-                            original_title = cleaned_title
+                            original_title = cleaned_title 
 
                         original_title = original_title.lstrip(":- ").strip()
 
@@ -175,9 +159,8 @@ def make_fanfic():
             return jsonify({'error': 'É necessário pelo menos 1 personagem.'}), 400
 
         for p in personagens_data:
-            # Garante que a descrição também é um tipo de dado esperado (string)
-            if not isinstance(p, dict) or 'nome' not in p or ('descricao' in p and not isinstance(p['descricao'], str)):
-                return jsonify({'error': 'Cada item na lista de personagens deve ser um dicionário com chaves "nome" e opcionalmente "descricao" (string).'}), 400
+            if not isinstance(p, dict) or 'nome' not in p:
+                return jsonify({'error': 'Cada item na lista de personagens deve ser um dicionário com a chave "nome".'}), 400
 
         response = criar_fanfic(personagens_data, genero, cenario, idioma)
         return jsonify(response), 200
@@ -186,4 +169,4 @@ def make_fanfic():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=False) # Mudei para False para produção, pode voltar para True para depuração
